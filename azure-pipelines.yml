@@ -1,0 +1,86 @@
+trigger:
+  branches:
+    include:
+      - master # or your target branch
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  # Define Java version and other environment variables
+  JAVA_HOME: '/usr/lib/jvm/java-11-openjdk-amd64'
+  AZURE_CONTAINER_REGISTRY: 'myacr.azurecr.io' # Change to your ACR name
+  IMAGE_NAME: 'my-java-app'                   # Docker image name
+  ACR_NAME: 'myacr'                           # Your ACR name
+  RESOURCE_GROUP: 'myResourceGroup'           # Azure Resource Group
+  APP_SERVICE_NAME: 'my-app-service'          # Azure App Service name
+
+stages:
+  - stage: Build
+    displayName: 'Build Java Application'
+    jobs:
+      - job: Build_Job
+        displayName: 'Build'
+        steps:
+          - task: Maven@3
+            inputs:
+              mavenPomFile: 'pom.xml'
+              mavenOptions: '-Xmx1024m'
+              javaHomeOption: 'JDKVersion'
+              jdkVersionOption: '1.11'
+              goals: 'clean package'
+    
+  - stage: DockerBuildAndPush
+    displayName: 'Docker Build and Push to ACR'
+    dependsOn: Build
+    jobs:
+      - job: Docker_Job
+        displayName: 'Build Docker Image and Push'
+        steps:
+          # Log in to Azure Container Registry
+          - task: Docker@2
+            inputs:
+              containerRegistry: '$(AZURE_CONTAINER_REGISTRY)'
+              repository: '$(IMAGE_NAME)'
+              command: 'login'
+
+          # Build Docker image
+          - task: Docker@2
+            inputs:
+              containerRegistry: '$(AZURE_CONTAINER_REGISTRY)'
+              repository: '$(IMAGE_NAME)'
+              dockerfile: 'Dockerfile'
+              command: 'buildAndPush'
+              tags: |
+                latest
+
+  - stage: DeployToAzure
+    displayName: 'Deploy to Azure App Service'
+    dependsOn: DockerBuildAndPush
+    jobs:
+      - job: Deploy_Job
+        displayName: 'Deploy Docker Image'
+        steps:
+          # Use Azure CLI task to deploy the Docker image to the App Service
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: 'AzureServiceConnection'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az webapp config container set \
+                  --name $(APP_SERVICE_NAME) \
+                  --resource-group $(RESOURCE_GROUP) \
+                  --docker-custom-image-name $(AZURE_CONTAINER_REGISTRY)/$(IMAGE_NAME):latest \
+                  --docker-registry-server-url https://$(AZURE_CONTAINER_REGISTRY) \
+                  --docker-registry-server-user $(DOCKER_USERNAME) \
+                  --docker-registry-server-password $(DOCKER_PASSWORD)
+
+          # Restart App Service to apply changes
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: 'AzureServiceConnection'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az webapp restart --name $(APP_SERVICE_NAME) --resource-group $(RESOURCE_GROUP)
