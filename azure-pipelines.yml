@@ -9,7 +9,7 @@ pool:
 variables:
   # Define Java version and other environment variables
   JAVA_HOME: '/usr/lib/jvm/java-11-openjdk-amd64'
-  AZURE_CONTAINER_REGISTRY: 'myacr.azurecr.io' # Change to your ACR name
+  AZURE_CONTAINER_REGISTRY: 'hmacr1.azurecr.io' # Change to your ACR name
   IMAGE_NAME: 'my-java-app'                   # Docker image name
   ACR_NAME: 'myacr'                           # Your ACR name
   RESOURCE_GROUP: 'myResourceGroup'           # Azure Resource Group
