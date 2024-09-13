@@ -14,6 +14,8 @@ variables:
   ACR_NAME: 'hmacr1'                           # Your ACR name
   RESOURCE_GROUP: 'hmapp_group'           # Azure Resource Group
   APP_SERVICE_NAME: 'my-app-service'          # Azure App Service name
+  containerRegistryUsername: 'hmacr1'  # Admin username from ACR Access keys
+  containerRegistryPassword: '$(ACR_PASSWORD)'
 
 stages:
   - stage: Build
