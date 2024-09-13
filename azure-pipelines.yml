@@ -11,8 +11,8 @@ variables:
   JAVA_HOME: '/usr/lib/jvm/java-11-openjdk-amd64'
   AZURE_CONTAINER_REGISTRY: 'hmacr1.azurecr.io' # Change to your ACR name
   IMAGE_NAME: 'my-java-app'                   # Docker image name
-  ACR_NAME: 'myacr'                           # Your ACR name
-  RESOURCE_GROUP: 'myResourceGroup'           # Azure Resource Group
+  ACR_NAME: 'hmacr1'                           # Your ACR name
+  RESOURCE_GROUP: 'hmapp_group'           # Azure Resource Group
   APP_SERVICE_NAME: 'my-app-service'          # Azure App Service name
 
 stages:
